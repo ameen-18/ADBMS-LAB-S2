@@ -1,0 +1,150 @@
+
+create table professor(pid int primary key,pname varchar(20),salary int);
+
+Table created.
+
+create or replace trigger minSalary before 
+insert on professor
+for each row
+begin
+	if (:new.salary < 60000 ) 
+	  then RAISE_APPLICATION_ERROR
+	 (-20004 , 'Violation of Minimum Professor Salary ');
+	end if;
+end;
+
+Trigger created.
+
+
+insert into professor values (&pid,'&pname',&salary);
+
+insert into professor values (&pid,'&pname',&salary);
+Enter value for pid: 23
+Enter value for pname: dfg
+Enter value for salary: 6
+old   1: insert into professor values (&pid,'&pname',&salary)
+new   1: insert into professor values (23,'dfg',6)
+insert into professor values (23,'dfg',6)
+            *
+ERROR at line 1:
+ORA-20004: Violation of Minimum Professor Salary
+ORA-06512: at "ABHIJITH.MINSALARY", line 3
+ORA-04088: error during execution of trigger 'ABHIJITH.MINSALARY'
+
+
+------------------------------------------------------------
+
+create table professor_backlog as select * from professor ;
+
+Table created.
+
+
+
+create or replace trigger t1 after delete on  professor 
+for each row
+begin 
+insert into professor_backlog values(:old.pid,:old.pname,:old.salary);
+end;
+/
+
+Trigger created.
+
+
+
+SQL> select * from  professor ;
+
+       PID PNAME                    SALARY
+---------- -------------------- ----------
+        12 abid                  300000000
+
+
+delete from professor_backlog;
+
+1 row deleted.
+
+SQL> delete from professor where pid=12;
+
+1 row deleted.
+
+SQL> select * from professor_backlog;
+
+       PID PNAME                    SALARY
+---------- -------------------- ----------
+        12 abid                  300000000
+
+
+Q)gold rate update question.
+
+
+
+
+create table gold (bdate date,price int);
+
+Table created.
+
+create table gold_history(new_date date,new_price int,old_price int);
+
+Table created.
+
+insert into gold values('7-jul-23',45000);
+
+1 row created.
+
+
+create or replace trigger t4 after update on gold
+for each row
+begin
+	insert into gold_history values(:new.bdate,:new.price,:old.price);
+end;
+/
+
+Trigger created.
+
+update gold set price=&price where bdate ='7-jul-23';
+
+Enter value for price: 610000
+old   1: update gold set price=&price where bdate ='7-jul-23'
+new   1: update gold set price=610000 where bdate ='7-jul-23'
+
+
+SQL> select * from gold;
+
+BDATE          PRICE
+--------- ----------
+07-JUL-23     610000
+
+
+select * from gold_history;
+
+
+
+NEW_DATE   NEW_PRICE  OLD_PRICE
+--------- ---------- ----------
+07-JUL-23     610000      60000
+
+
+
+
+Q)write a Trigger to restrict deletion from professor table.
+
+
+
+create or replace trigger t3 before delete on professor 
+for each row
+begin
+	RAISE_APPLICATION_ERROR(-20006,'deletion is not possible');
+end;
+/
+
+Trigger created.
+
+delete from professor where pid=10
+            *
+ERROR at line 1:
+ORA-20006: deletion is not possible
+ORA-06512: at "ABHIJITH.T3", line 2
+ORA-04088: error during execution of trigger 'ABHIJITH.T3'
+
+
+
+
